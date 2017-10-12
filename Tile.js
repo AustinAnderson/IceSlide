@@ -1,7 +1,7 @@
 //int xPos
 //int yPos
 //string tileType
-function Tile(xPos,yPos,tileType){
+function Tile(xPos,yPos,tileType){//model
     var x=xPos;
     var y=yPos;
     var id="t"+x+y;
