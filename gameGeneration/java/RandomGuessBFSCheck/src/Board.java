@@ -79,7 +79,7 @@ public class Board {
 		}
 		public void print(PrintStream printer) {
 			           char out='.';
-			if(rock)        out='O';
+			if(rock)        out='▒';
 			if(this==start) out='s';
 			if(this==end)   out='e';
 			printer.print(out);
@@ -107,30 +107,44 @@ public class Board {
 		return head==end;
 	}
 	public static void main(String[] args){
-		final boolean O=true;
-		final boolean _=false;
-		final boolean $=false;
+		final boolean XX=true;
+		final boolean __=false;
+		final boolean  o=false;
+		final boolean oo=false;
+		final boolean oO=false;
+		final boolean Oo=false;
+		final boolean  O=false;
+		Board unwinnable=new Board(new boolean[][]{
+			{XX, O,XX,XX,XX,XX,XX,XX,XX,XX,XX,XX,XX,XX},
+			{XX, O, o,oo,oo,oo,oo,oo,oo,oo,oo,XX,__,XX},
+			{XX, O,oO,XX,__,__,__,__,__,__, O,__,__,XX},
+			{XX,XX,__,__,__,XX,oo,oo,oo,oo,oO,__,__,XX},
+			{XX,__,__,__,__,__,O ,__,__,__,XX,__,__,XX},
+			{XX,__,__,__,__,__,Oo,oo,oo,oo,oo,oo,XX,XX},
+			{XX,__,__,__,__,__,XX,__,__,__,__,XX,__,XX},
+			{XX,XX,XX,XX,XX,XX,XX,XX,XX,XX,XX,__,XX,XX},
+		});
 		Board b1=new Board(new boolean[][]{
-			{O,$,O,O,O,O,O,O,O,O,O,O,O,O},
-			{O,$,$,$,$,$,$,$,$,$,$,O,_,O},
-			{O,$,$,O,_,_,_,_,_,_,$,_,_,O},
-			{O,O,_,_,_,O,$,$,$,$,$,_,_,O},
-			{O,_,_,_,_,_,$,_,_,_,O,_,_,O},
-			{O,_,_,_,_,_,$,$,$,$,$,$,O,O},
-			{O,_,_,_,_,_,O,_,_,_,_,$,_,O},
-			{O,O,O,O,O,O,O,O,O,O,O,$,O,O},
+			{XX,O ,XX,XX,XX,XX,XX,XX,XX,XX,XX,XX,XX,XX},
+			{XX,O , o,oo,oo,oo,oo,oo,oo,oo,oo,XX,__,XX},
+			{XX,Oo,oO,XX,__,__,__,__,__,__, O,__,__,XX},
+			{XX,XX,__,__,__,XX,oo,oo,oo,oo,oO,__,__,XX},
+			{XX,__,__,__,__,__,O ,__,__,__,XX,__,__,XX},
+			{XX,__,__,__,__,__,Oo,oo,oo,oo,oo,oo,XX,XX},
+			{XX,__,__,__,__,__,XX,__,__,__,__, O,__,XX},
+			{XX,XX,XX,XX,XX,XX,XX,XX,XX,XX,XX, O,XX,XX},
 		});
 		Board b2=new Board(new boolean[][]{
-			{O,O,O,O,O,O,O,O,O,O,O,O,$,O,O},
-			{O,_,_,_,_,_,_,_,_,_,_,_,$,_,O},
-			{O,_,_,_,O,$,$,$,$,$,$,$,$,_,O},
-			{O,_,_,_,_,$,_,_,_,_,_,_,O,_,O},
-			{O,_,_,O,_,$,_,_,_,_,_,_,_,_,O},
-			{O,_,_,$,$,$,$,$,$,$,$,O,_,_,O},
-			{O,_,_,$,_,$,_,_,_,_,$,_,_,_,O},
-			{O,_,O,$,$,$,O,$,$,$,$,_,_,_,O},
-			{O,_,_,_,_,O,_,$,_,_,O,_,_,_,O},
-			{O,O,O,O,O,O,O,$,O,O,O,O,O,O,O},
+			{XX,XX,XX,XX,XX,XX,XX,XX,XX,XX,XX,XX,O ,XX,XX},
+			{XX,__,__,__,__,__,__,__,__,__,__,__,O ,__,XX},
+			{XX,__,__,__,XX,oo,oo,oo,oo,oo,oo,oo,O ,__,XX},
+			{XX,__,__,__,__,O ,__,__,__,__,__,__,XX,__,XX},
+			{XX,__,__,XX,__,O ,__,__,__,__,__,__,__,__,XX},
+			{XX,__,__,oo,oo,Oo,oo,oo,oo,oo,oo,XX,__,__,XX},
+			{XX,__,__,O ,__,O ,__,__,__,__, O,__,__,__,XX},
+			{XX,__,XX,Oo,oo,O ,XX,oo,oo,oo,oO,__,__,__,XX},
+			{XX,__,__,__,__,XX,__,O ,__,__,XX,__,__,__,XX},
+			{XX,XX,XX,XX,XX,XX,XX,O ,XX,XX,XX,XX,XX,XX,XX},
 		});
 		//b1.print(System.out);
 		b2.print(System.out);
