@@ -1,2 +1,5 @@
 #files to ignore
 *.swp
+*.classpath
+*.project
+*.settings/
