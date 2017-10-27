@@ -1,5 +1,6 @@
 import java.io.PrintStream;
 import java.util.LinkedList;
+import java.util.Queue;
 
 public class Board {
 
@@ -44,45 +45,61 @@ public class Board {
 	}
 	private Position[][] board;
 	private class Position{
-		public final static int UP=0,DOWN=1,LEFT=2,RIGHT=3,DONE=4;
+		private final static char UP='^',DOWN='v',LEFT='<',RIGHT='>',DONE='e';
+		public final static int StateCount=4;
 		public Position(int r,int c,boolean isRock){
 			this.r=r;
 			this.c=c;
 			this.rock=isRock;
-			//assumes start is at top and UP is first num to avoid check
-			if(this==start) state=DOWN;
+		}
+		public String getPath(){
+			return path;
 		}
 		public final int r;
 		public final int c;
 		public final boolean rock;
-		private int state=UP;
+		private boolean visited=false;
+		private String path="";
+		private char state=UP;
 		public Position next(){
 			Position toReturn=null;
+			0nji9
+			
 			if(state!=DONE){
                 int otherR=r;
                 int otherC=c;
-                int modr=-1;
-                int modc=-1;
-                
-                if(state==  UP||state== DOWN) modc=0;
-                if(state==LEFT||state==RIGHT) modr=0;
-                if(state== DOWN) modr=1;
-                if(state==RIGHT) modc=1;
+                int modr=0;
+                int modc=0;
+                char direction=state;
+                     if(state==   UP){state=LEFT;  modr=-1;}
+                else if(state== LEFT){state=DOWN;  modc=-1;}
+                else if(state== DOWN){state=RIGHT; modr=1; }
+                else if(state==RIGHT){state=DONE;  modc=1; }
                 while(!board[otherR+modr][otherC+modc].rock&&board[otherR][otherC]!=end){
                     otherR+=modr;
                     otherC+=modr;
                 }
-                state++;
                 toReturn=board[otherR][otherC];
+                if(toReturn.visited){
+                	toReturn=null;
+                }else{
+                	toReturn.visited=true;
+                	toReturn.path=this.path+direction;
+                }
 			}
+			
 			return toReturn;
 		}
 		public void print(PrintStream printer) {
-			           char out='.';
-			if(rock)        out='▒';
+			           char out='+';
+			if(rock)        out='@';
 			if(this==start) out='s';
 			if(this==end)   out='e';
 			printer.print(out);
+		}
+		@Override
+		public String toString(){
+			return String.format("{(%d,%d) %s, %s}",r,c,state,path);
 		}
 	}
 	public void print(PrintStream printer){
@@ -93,18 +110,21 @@ public class Board {
 			printer.println();
 		}
 	}
-	public boolean solve(){
-		LinkedList<Position> queue=new LinkedList<Position>();
-		queue.push(start);
-		Position head=queue.peekFirst();
-		while(head!=end&&!queue.isEmpty()){
-			for(int i=0;i<Position.DONE;i++){
+	public String solve(){
+		Queue<Position> queue=new LinkedList<Position>();
+		queue.add(start);
+		while(!queue.isEmpty()&&queue.peek()!=end){
+			Position head=queue.remove();
+			for(int i=0;i<Position.StateCount;i++){
 				Position next=head.next();
-				if(next!=null) queue.add(next);
+				if(next!=null) {
+					queue.add(next);
+				}
 			}
-			queue.removeFirst();
 		}
-		return head==end;
+		String result=null;
+		if(!queue.isEmpty()) result=queue.poll().getPath();//if !empty then should be end position
+		return result;
 	}
 	public static void main(String[] args){
 		final boolean XX=true;
@@ -124,7 +144,7 @@ public class Board {
 			{XX,__,__,__,__,__,XX,__,__,__,__,XX,__,XX},
 			{XX,XX,XX,XX,XX,XX,XX,XX,XX,XX,XX,__,XX,XX},
 		});
-		Board b1=new Board(new boolean[][]{
+		Board b1=new Board(new boolean[][]{//v>^>v<v>v
 			{XX,O ,XX,XX,XX,XX,XX,XX,XX,XX,XX,XX,XX,XX},
 			{XX,O , o,oo,oo,oo,oo,oo,oo,oo,oo,XX,__,XX},
 			{XX,Oo,oO,XX,__,__,__,__,__,__, O,__,__,XX},
@@ -134,7 +154,7 @@ public class Board {
 			{XX,__,__,__,__,__,XX,__,__,__,__, O,__,XX},
 			{XX,XX,XX,XX,XX,XX,XX,XX,XX,XX,XX, O,XX,XX},
 		});
-		Board b2=new Board(new boolean[][]{
+		Board b2=new Board(new boolean[][]{//v<v<^>v<v
 			{XX,XX,XX,XX,XX,XX,XX,XX,XX,XX,XX,XX,O ,XX,XX},
 			{XX,__,__,__,__,__,__,__,__,__,__,__,O ,__,XX},
 			{XX,__,__,__,XX,oo,oo,oo,oo,oo,oo,oo,O ,__,XX},
@@ -148,5 +168,6 @@ public class Board {
 		});
 		//b1.print(System.out);
 		b2.print(System.out);
+		System.out.println(b2.solve());
 	}
 }
