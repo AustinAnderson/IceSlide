@@ -56,7 +56,9 @@ public class Board {
             }
             
             
-            start=board[0][getRandNonRockColNdx(1)];
+            int startCol=getRandNonRockColNdx(height-2);
+            board[0][startCol]=new Position(0,startCol,false);
+            start=board[0][startCol];
             int endCol=getRandNonRockColNdx(height-2);
             board[height-1][endCol]=new Position(height-1,endCol,false);
             end=board[height-1][endCol];
@@ -72,16 +74,24 @@ public class Board {
 			this.r=r;
 			this.c=c;
 			this.rock=isRock;
+		    resetIterationState();
 		}
 		public final int r;
 		public final int c;
 		public final boolean rock;
-		private char state=UP;
-		private String path="";
+		private char state;
+		private String path;
+		private boolean visited;
 		public String getPath(){
 			return path;
 		}
-		private boolean visited=false;
+		public void resetIterationState(){
+			visited=false;
+			state=UP;
+			path="";
+		}
+
+
 		public void setVisited(){
 			visited=true;
 		}
@@ -115,7 +125,7 @@ public class Board {
 			return toReturn;
 		}
 		public void print(PrintStream printer) {
-			           char out='.';
+			           char out='_';
 			if(rock)        out='O';
 			if(this==start) out='s';
 			if(this==end)   out='e';
@@ -123,20 +133,26 @@ public class Board {
 		}
 	}
 	public void print(PrintStream printer){
-	    printer.print(' ');
+	    printer.print(" |");
 	    for(int c=0;c<width;c++){
-	        printer.print(Integer.toHexString(c));
+	        printer.print(Integer.toHexString(c)+"|");
 	    }
 	    printer.println();
 		for(int r=0;r<height;r++){
 	        printer.print(Integer.toHexString(r));
 			for(int c=0;c<width;c++){
+				printer.print("|");
 				board[r][c].print(printer);
 			}
-			printer.println();
+			printer.println("|");
 		}
 	}
 	public String solve(){
+		for(int i=0;i<board.length;i++){
+			for(int j=0;j<board[i].length;j++){
+				board[i][j].resetIterationState();
+			}
+		}
 		Queue<Position> queue=new LinkedList<Position>();
 		queue.add(start);
 		start.setVisited();
@@ -158,66 +174,8 @@ public class Board {
 		return solvePath;
 	}
 	public static void main(String[] args){
-		final boolean O=true;
-		final boolean _=false;
-		final boolean $=false;
-		/*
-		Board b1=new Board(new boolean[][]{
-			{O,$,O,O,O,O,O,O,O,O,O,O,O,O},
-			{O,$,$,$,$,$,$,$,$,$,$,O,_,O},
-			{O,$,$,O,_,_,_,_,_,_,$,_,_,O},
-			{O,O,_,_,_,O,$,$,$,$,$,_,_,O},
-			{O,_,_,_,_,_,$,_,_,_,O,_,_,O},
-			{O,_,_,_,_,_,$,$,$,$,$,$,O,O},
-			{O,_,_,_,_,_,O,_,_,_,_,$,_,O},
-			{O,O,O,O,O,O,O,O,O,O,O,$,O,O},
-		});
-		Board b2=new Board(new boolean[][]{
-			{O,O,O,O,O,O,O,O,O,O,O,O,$,O,O},
-			{O,_,_,_,_,_,_,_,_,_,_,_,$,_,O},
-			{O,_,_,_,O,$,$,$,$,$,$,$,$,_,O},
-			{O,_,_,_,_,$,_,_,_,_,_,_,O,_,O},
-			{O,_,_,O,_,$,_,_,_,_,_,_,_,_,O},
-			{O,_,_,$,$,$,$,$,$,$,$,O,_,_,O},
-			{O,_,_,$,_,$,_,_,_,_,$,_,_,_,O},
-			{O,_,O,$,$,$,O,$,$,$,$,_,_,_,O},
-			{O,_,_,_,_,O,_,$,_,_,O,_,_,_,O},
-			{O,O,O,O,O,O,O,$,O,O,O,O,O,O,O},
-		});
-		Board b3=new Board(new boolean[][]{
-			{O,O,O,_,O},
-			{O,_,_,_,O},
-			{O,O,_,_,O},
-			{O,O,_,_,O},
-			{O,_,O,O,O},
-		});  
-		Board b4=new Board(new boolean[][]{
-			{O,O,O,$,O,O,O,O,O,O},
-			{O,_,O,_,_,_,_,_,_,O},
-			{O,_,_,O,_,_,_,O,_,O},
-			{O,O,_,_,_,O,_,_,_,O},
-			{O,O,O,O,O,O,$,O,O,O}
-		});
-		*/
-		//b2.print(System.out);
-		//System.out.println(b2.solve());
-		//b1.print(System.out);
-		//System.out.println(b1.solve());
-		new Board(10,10,8).print(System.out);
-		/*
-		
-		failed on this one
-0123456789
-0OOOOOOsOOO
-1O........O
-2O...O....O
-3OO...O..OO
-4OO...O...O
-5O...O....O
-6O.......OO
-7O..OO..O.O
-8O...OO...O
-9OeOOOOOOOO
-		*/
+		Board b=new Board(10,10,8);
+		b.print(System.out);
+		System.out.println(b.solve());
 	}
 }
