@@ -1,3 +1,4 @@
+import java.awt.Point;
 import java.io.PrintStream;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -41,7 +42,8 @@ public class Board {
 		end=endValue;
 	}
 	public Board(int height,int width,int minMoves){
-		if(height<3) height=3;
+		if(height<4) height=4;
+		if(width<4) width=4;
 		int solutionLength=0;
         this.height=height;
         this.width=width;
@@ -66,10 +68,18 @@ public class Board {
             if(result!=null) solutionLength=result.length();
 		}
 	}
+	public boolean[][] toBoolMap(){
+		boolean[][] map=new boolean[board.length][];
+		for(int i=0;i<map.length;i++){
+			map[i]=new boolean[board[i].length];
+			for(int j=0;j<map[i].length;j++){
+				map[i][j]=board[i][j].rock;
+			}
+		}
+		return map;
+	}
 	private Position[][] board;
 	private class Position{
-		private final static char UP='^',DOWN='v',LEFT='<',RIGHT='>',DONE='e';
-		public final static int NumStates=5;
 		public Position(int r,int c,boolean isRock){
 			this.r=r;
 			this.c=c;
@@ -79,7 +89,7 @@ public class Board {
 		public final int r;
 		public final int c;
 		public final boolean rock;
-		private char state;
+		private Direction state;
 		private String path;
 		private boolean visited;
 		public String getPath(){
@@ -87,7 +97,7 @@ public class Board {
 		}
 		public void resetIterationState(){
 			visited=false;
-			state=UP;
+			state=Direction.UP;
 			path="";
 		}
 
@@ -102,17 +112,13 @@ public class Board {
 		}
 		public Position next(){
 			Position toReturn=null;
-			if(state!=DONE){
+			if(state!=null){
                 int otherR=r;
                 int otherC=c;
-                int modr=0;
-                int modc=0;
-                char direction=state; 
-                
-                     if(state==   UP){ state=DOWN;modr=-1;}
-                else if(state== DOWN){ state=LEFT;modr= 1;}
-                else if(state== LEFT){state=RIGHT;modc=-1;}
-                else if(state==RIGHT){ state=DONE;modc= 1;}
+                int modr=state.getModR();
+                int modc=state.getModC();
+                Direction direction=state; 
+                state=state.next();
                 while(!isOutOfBoundsOrRock(otherR+modr,otherC+modc)&&board[otherR][otherC]!=end){
                     otherR+=modr;
                     otherC+=modc;
@@ -159,12 +165,14 @@ public class Board {
 		Position head=null;
 		while(head!=end&&!queue.isEmpty()){
 			head=queue.remove();
-			for(int i=0;i<Position.NumStates;i++){
+			Direction iterateDirs=Direction.UP;
+			while(iterateDirs!=null){
 				Position next=head.next();
 				if(next!=null){
 					queue.add(next);
 					next.setVisited();
 				}
+				iterateDirs=iterateDirs.next();
 			}
 		}
 		String solvePath=null;
@@ -173,8 +181,19 @@ public class Board {
 		}
 		return solvePath;
 	}
+	public Point getNextPosition(Point current, Direction dir){
+		for(int i=0;i<board.length;i++){
+			for(int j=0;j<board[i].length;j++){
+				board[i][j].resetIterationState();
+			}
+		}
+		Position start=new Position(current.x,current.y,false);
+		start.state=dir;
+		Position next=start.next();
+		return new Point(next.r,next.c);
+	}
 	public static void main(String[] args){
-		Board b=new Board(10,10,8);
+		Board b=new Board(14,20,20);
 		b.print(System.out);
 		System.out.println(b.solve());
 	}
