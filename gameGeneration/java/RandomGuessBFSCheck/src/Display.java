@@ -1,8 +1,8 @@
 
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.Image;
-import java.awt.Point;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
@@ -18,8 +18,7 @@ import javax.swing.JPanel;
 
 public class Display extends JFrame {
 	class Smile {
-		private final static int step=20;
-		private final static int sleepTime=100;
+		private final static int sleepTime=2;
 		private final BufferedImage smileImg;
 		private final int tileHeight;
 		private final int tileWidth;
@@ -41,19 +40,37 @@ public class Display extends JFrame {
 			smileImg=ImageIO.read(new File("Resources/Smile.png"));
 		}
 		
-		public Point getPos(){return new Point(row,col);}
-		public void updatePosition(Point target){
+		public Coordinate getPos(){return new Coordinate(row,col);}
+		//return -1,0, or 1
+		private int sign(int value){
+			if(value==0) return 0;
+			return (value>>31)|1;//arithmetic shift to fill everything with sign bit, then last number is 1
+		}
+		public void updatePosition(Coordinate target){
 			if(!moving.get()){
-				moving.set(true);
-                int stepR=(int)((target.x-row)*tileHeight/step);
-                int stepC=(int)((target.y-col)*tileWidth/step);
-                for(int i=0;i<step;i++){
-                    y.addAndGet(stepR);
-                    x.addAndGet(stepC);
-                    try {Thread.sleep(sleepTime);} catch (InterruptedException e) {}
-                    parent.repaint();
-                }
-			    moving.set(false);
+                Thread t=new Thread(new Runnable(){
+                    @Override
+                    public void run(){
+                        moving.set(true);
+                        int dY=(target.r*tileHeight)-y.get();
+                        int dX=(target.c*tileWidth)-x.get();
+                        int incX=sign(dX);
+                        int incY=sign(dY);
+                        int targetDist=Math.abs(dY);
+                        if(Math.abs(dX)>targetDist) targetDist=Math.abs(dX);
+                        
+                        for(int i=0;i<targetDist;i++){
+                            y.addAndGet(incY);
+                            x.addAndGet(incX);
+                            try {Thread.sleep(sleepTime);} catch (InterruptedException e) {}
+                            parent.repaint();
+                        }
+                        row=target.r;
+                        col=target.c;
+                        moving.set(false);
+                    }
+                });
+                t.start();
 			}
 		}
 		public void paintComponent(Graphics g){
@@ -105,7 +122,7 @@ public class Display extends JFrame {
 	}
 	private static final long serialVersionUID = 1L;
 	public Display() throws IOException{
-		Board board=new Board(20,20,20);
+		Board board=new Board(15,20,20);
 		int initCol=0;
 		boolean[][] rocks=board.toBoolMap();
 		for(int i=0;i<rocks[0].length;i++)
@@ -134,8 +151,8 @@ public class Display extends JFrame {
 			}
 			public void keyReleased(KeyEvent e) {}
 		});
-		this.setSize(img.getWidth(), img.getWidth());
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setMinimumSize(new Dimension(img.getWidth(),img.getHeight()));
 		pack();
 		setVisible(true);
 	}

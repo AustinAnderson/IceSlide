@@ -1,4 +1,3 @@
-import java.awt.Point;
 import java.io.PrintStream;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -181,16 +180,16 @@ public class Board {
 		}
 		return solvePath;
 	}
-	public Point getNextPosition(Point current, Direction dir){
+	public Coordinate getNextPosition(Coordinate current, Direction dir){
 		for(int i=0;i<board.length;i++){
 			for(int j=0;j<board[i].length;j++){
 				board[i][j].resetIterationState();
 			}
 		}
-		Position start=new Position(current.x,current.y,false);
+		Position start=new Position(current.r,current.c,false);
 		start.state=dir;
 		Position next=start.next();
-		return new Point(next.r,next.c);
+		return new Coordinate(next.r,next.c);
 	}
 	public static void main(String[] args){
 		Board b=new Board(14,20,20);
