@@ -9,6 +9,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -17,9 +19,10 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 public class Display extends JFrame {
-	class Smile {
-		private final static int sleepTime=2;
-		private final BufferedImage smileImg;
+	class Player {
+		private BufferedImage currentSprite;
+		private final static int sleepTime=3;
+		private final Map<Direction,BufferedImage[]> spriteMap;
 		private final int tileHeight;
 		private final int tileWidth;
 		private final JFrame parent;
@@ -28,7 +31,7 @@ public class Display extends JFrame {
 		private int col;
 		private AtomicInteger x;
 		private AtomicInteger y;
-		public Smile(int initialRow,int initialCol,int tileHeight,int tileWidth,JFrame parent) throws IOException{
+		public Player(int initialRow,int initialCol,int tileHeight,int tileWidth,JFrame parent) throws IOException{
 			this.parent=parent;
 			this.moving=new AtomicBoolean(false);
 			this.row=initialRow;
@@ -37,7 +40,25 @@ public class Display extends JFrame {
 			this.tileWidth=tileWidth;
 			this.x=new AtomicInteger(initialCol*tileWidth);
 			this.y=new AtomicInteger(initialRow*tileHeight);
-			smileImg=ImageIO.read(new File("Resources/Smile.png"));
+			spriteMap=new HashMap<>();
+			
+			spriteMap.put(Direction.DOWN, new BufferedImage[]{
+				ImageIO.read(new File("Resources/FairUse/downStep.png")),
+				ImageIO.read(new File("Resources/FairUse/down.png"))
+			});
+			spriteMap.put(Direction.LEFT, new BufferedImage[]{
+				ImageIO.read(new File("Resources/FairUse/leftStep.png")),
+				ImageIO.read(new File("Resources/FairUse/left.png"))
+			});
+			spriteMap.put(Direction.RIGHT, new BufferedImage[]{
+				ImageIO.read(new File("Resources/FairUse/rightStep.png")),
+				ImageIO.read(new File("Resources/FairUse/right.png"))
+			});
+			spriteMap.put(Direction.UP, new BufferedImage[]{
+				ImageIO.read(new File("Resources/FairUse/upStep.png")),
+				ImageIO.read(new File("Resources/FairUse/up.png"))
+			});
+			currentSprite=spriteMap.get(Direction.DOWN)[1];
 		}
 		
 		public Coordinate getPos(){return new Coordinate(row,col);}
@@ -46,8 +67,9 @@ public class Display extends JFrame {
 			if(value==0) return 0;
 			return (value>>31)|1;//arithmetic shift to fill everything with sign bit, then last number is 1
 		}
-		public void updatePosition(Coordinate target){
+		public void updatePosition(Coordinate target,Direction dir){
 			if(!moving.get()){
+				currentSprite=spriteMap.get(dir)[0];
                 Thread t=new Thread(new Runnable(){
                     @Override
                     public void run(){
@@ -60,6 +82,9 @@ public class Display extends JFrame {
                         if(Math.abs(dX)>targetDist) targetDist=Math.abs(dX);
                         
                         for(int i=0;i<targetDist;i++){
+                        	if(i==(tileHeight-1)){
+                        		currentSprite=spriteMap.get(dir)[1];
+                        	}
                             y.addAndGet(incY);
                             x.addAndGet(incX);
                             try {Thread.sleep(sleepTime);} catch (InterruptedException e) {}
@@ -74,7 +99,7 @@ public class Display extends JFrame {
 			}
 		}
 		public void paintComponent(Graphics g){
-			g.drawImage(smileImg, x.get(),y.get(),null);
+			g.drawImage(currentSprite, x.get(),y.get(),null);
 		}
 	}
 	class BoardImage extends JPanel{
@@ -82,7 +107,7 @@ public class Display extends JFrame {
 		private final BufferedImage Ice;
 		private final BufferedImage Rock;
 		private boolean[][] rockMap;
-		private Smile smiley=null;
+		private Player smiley=null;
 		public BoardImage() throws IOException{
 			try{
 				Ice=ImageIO.read(new File("Resources/Ice.png"));
@@ -94,7 +119,7 @@ public class Display extends JFrame {
             	throw new IOException("rock and ice images must be the same dimensions");
             }
 		}
-		public void setSmile(Smile smile){
+		public void setSmile(Player smile){
 			smiley=smile;
 		}
 		private Image getImg(boolean rock){
@@ -134,7 +159,7 @@ public class Display extends JFrame {
 		img.update(board.toBoolMap());
 		setLayout(new GridLayout(1,1));
 		this.add(img);
-		Smile cursor=new Smile(0,initCol,img.getTileHeight(),img.getTileWidth(),this);
+		Player cursor=new Player(0,initCol,img.getTileHeight(),img.getTileWidth(),this);
 		img.setSmile(cursor);
 		this.addKeyListener(new KeyListener(){
 			public void keyTyped(KeyEvent e) {}
@@ -146,13 +171,13 @@ public class Display extends JFrame {
 				if(e.getKeyCode()==KeyEvent.VK_UP) dir=Direction.UP;
 				if(e.getKeyCode()==KeyEvent.VK_DOWN) dir=Direction.DOWN;
 				if(dir!=null){
-					cursor.updatePosition(board.getNextPosition(cursor.getPos(), dir));
+					cursor.updatePosition(board.getNextPosition(cursor.getPos(), dir),dir);
 				}
 			}
 			public void keyReleased(KeyEvent e) {}
 		});
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.setMinimumSize(new Dimension(img.getWidth(),img.getHeight()));
+		this.setMinimumSize(new Dimension(img.getWidth(),img.getHeight()+20));
 		pack();
 		setVisible(true);
 	}
