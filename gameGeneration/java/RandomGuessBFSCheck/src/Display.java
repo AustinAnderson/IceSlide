@@ -81,14 +81,23 @@ public class Display extends JFrame {
                         int targetDist=Math.abs(dY);
                         if(Math.abs(dX)>targetDist) targetDist=Math.abs(dX);
                         
-                        for(int i=0;i<targetDist;i++){
-                        	if(i==(tileHeight-1)){
-                        		currentSprite=spriteMap.get(dir)[1];
+                        if(targetDist<tileWidth){
+                        	for(int i=0;i<tileHeight*2;i++){
+                                try {Thread.sleep(sleepTime);} catch (InterruptedException e) {}
+                                parent.repaint();
+                                if(i==tileHeight-1) currentSprite=spriteMap.get(dir)[1];
                         	}
-                            y.addAndGet(incY);
-                            x.addAndGet(incX);
-                            try {Thread.sleep(sleepTime);} catch (InterruptedException e) {}
-                            parent.repaint();
+                        }
+                        else{
+                            for(int i=0;i<targetDist;i++){
+                                if(i==(tileHeight-1)){
+                                    currentSprite=spriteMap.get(dir)[1];
+                                }
+                                y.addAndGet(incY);
+                                x.addAndGet(incX);
+                                try {Thread.sleep(sleepTime);} catch (InterruptedException e) {}
+                                parent.repaint();
+                            }
                         }
                         row=target.r;
                         col=target.c;
