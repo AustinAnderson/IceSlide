@@ -80,6 +80,11 @@ public class Board {
 		return map;
 	}
 	private Position[][] board;
+    private boolean isOutOfBoundsOrRock(int r,int c){
+        return r<0||r>=board.length||
+               c<0||c>=board[0].length||
+               board[r][c].rock;
+    }
 	private class Position{
 		public Position(int r,int c,boolean isRock){
 			this.r=r;
@@ -105,11 +110,6 @@ public class Board {
 
 		public void setVisited(){
 			visited=true;
-		}
-		private boolean isOutOfBoundsOrRock(int r,int c){
-            return r<0||r>=board.length||
-                   c<0||c>=board[0].length||
-                   board[r][c].rock;
 		}
 		public Position next(){
 			Position toReturn=null;
@@ -155,14 +155,19 @@ public class Board {
 		}
 	}
 	public String solve(){
+		return solve(new Coordinate(start.r,start.c));
+	}
+	public String solve(Coordinate coord){
+		if(coord==null||isOutOfBoundsOrRock(coord.r, coord.c)) return null;
 		for(int i=0;i<board.length;i++){
 			for(int j=0;j<board[i].length;j++){
 				board[i][j].resetIterationState();
 			}
 		}
 		Queue<Position> queue=new LinkedList<Position>();
-		queue.add(start);
-		start.setVisited();
+		Position first=board[coord.r][coord.c];
+		queue.add(first);
+		first.setVisited();
 		Position head=null;
 		while(head!=end&&!queue.isEmpty()){
 			head=queue.remove();
@@ -194,8 +199,34 @@ public class Board {
 		return new Coordinate(next.r,next.c);
 	}
 	public static void main(String[] args){
+		boolean O=true;
+		boolean _=false;
+		Board fromMiddle=new Board(
+				new boolean[][]{
+				        //0 1 2 3 4 5 6 7 8 0 A B C D E F G H I J
+					/*0*/{O,O,_,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O,O},
+					/*1*/{O,_,_,O,_,O,_,_,_,_,_,O,_,_,_,_,_,_,_,O},
+					/*2*/{O,_,O,_,O,_,O,_,_,_,_,O,_,_,_,_,_,O,_,O},
+					/*3*/{O,_,_,_,O,O,_,_,_,_,O,_,_,_,_,_,_,_,_,O},
+					/*4*/{O,_,_,_,_,_,O,_,_,_,_,O,_,_,_,_,_,O,_,O},
+					/*5*/{O,_,_,_,_,_,_,_,_,_,_,O,O,_,_,O,_,O,_,O},
+					/*6*/{O,_,_,_,_,_,_,O,_,_,_,_,_,_,O,_,_,_,O,O},
+					/*7*/{O,O,_,_,_,_,O,_,_,_,_,_,O,_,_,_,_,_,O,O},
+					/*8*/{O,_,O,_,O,_,_,O,O,_,_,_,_,_,_,_,_,_,_,O},
+					/*9*/{O,_,_,O,_,_,_,_,_,_,_,_,_,_,_,_,_,_,O,O},
+					/*A*/{O,_,_,_,_,_,_,_,O,_,_,_,_,_,_,_,_,O,_,O},
+					/*B*/{O,_,_,_,_,_,_,O,_,_,_,_,_,_,O,_,_,_,_,O},
+					/*C*/{O,_,_,_,O,_,_,O,_,O,_,_,_,_,O,_,_,_,_,O},
+					/*D*/{O,O,O,O,O,O,_,O,O,O,O,O,O,O,O,O,O,O,O,O}
+					}
+		);
+		/*
 		Board b=new Board(14,20,20);
 		b.print(System.out);
 		System.out.println(b.solve());
+		*/
+		fromMiddle.print(System.out);
+		System.out.println(fromMiddle.solve(new Coordinate(5,10)));
+		System.out.println(fromMiddle.solve());
 	}
 }
