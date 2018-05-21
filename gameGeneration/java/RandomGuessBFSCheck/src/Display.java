@@ -10,7 +10,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -68,10 +70,11 @@ public class Display extends JFrame {
 			if(value==0) return 0;
 			return (value>>31)|1;//arithmetic shift to fill everything with sign bit, then last number is 1
 		}
-		public void updatePosition(Coordinate target,Direction dir){
+		public Thread updatePosition(Coordinate target,Direction dir){
+            Thread t=null;
 			if(!moving.get()){
 				currentSprite=spriteMap.get(dir)[0];
-                Thread t=new Thread(new Runnable(){
+                t=new Thread(new Runnable(){
                     @Override
                     public void run(){
                         moving.set(true);
@@ -107,6 +110,7 @@ public class Display extends JFrame {
                 });
                 t.start();
 			}
+			return t;
 		}
 		public void paintComponent(Graphics g){
 			g.drawImage(currentSprite, x.get(),y.get(),null);
@@ -159,6 +163,19 @@ public class Display extends JFrame {
 	private Board board;
 	private BoardImage img;
 	private Player cursor;
+	private boolean listeningForInput=true;
+	public void solveGame(){
+		listeningForInput=false;
+		String solution=board.solve(cursor.getPos());
+		if(solution!=null){
+			Queue<Direction> moves=new LinkedList<Direction>();
+			for(int i=0;i<solution.length();i++){
+				moves.add(Direction.parse(solution.charAt(i)));
+			}
+			new Thread(new AutoMoveTask(this,moves)).start();
+		}
+		listeningForInput=true;
+	}
 	public void newGame() throws IOException{
 		board=new Board(15,20,20);
 		int initCol=0;
@@ -175,21 +192,47 @@ public class Display extends JFrame {
 		this.add(img);
         this.repaint();
 	}
+	private Thread move(Direction dir){
+		Thread moveTask=null;
+        if(dir!=null){
+            moveTask=cursor.updatePosition(board.getNextPosition(cursor.getPos(), dir),dir);
+        }
+        return moveTask;
+	}
+	private class AutoMoveTask implements Runnable{
+		private Queue<Direction> moves;
+		private Display disp;
+		public AutoMoveTask(Display disp,Queue<Direction> moves){
+			this.moves=moves;
+			this.disp=disp;
+		}
+		public void run(){
+			while(!moves.isEmpty()){
+                try {
+                    disp.move(moves.poll()).join();
+                    Thread.sleep(20);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+			}
+		}
+	}
 	private class ControlsMap implements KeyListener{
 		private final Display dispRef;
 		public ControlsMap(Display dispRef){this.dispRef=dispRef;}
         public void keyTyped(KeyEvent e) {}
         @Override
         public void keyPressed(KeyEvent e) {
-            Direction dir=null;
-            if(e.getKeyCode()==KeyEvent.VK_LEFT) dir=Direction.LEFT;
-            if(e.getKeyCode()==KeyEvent.VK_RIGHT) dir=Direction.RIGHT;
-            if(e.getKeyCode()==KeyEvent.VK_UP) dir=Direction.UP;
-            if(e.getKeyCode()==KeyEvent.VK_DOWN) dir=Direction.DOWN;
-            if(e.getKeyCode()==KeyEvent.VK_N) try{dispRef.newGame();}catch(Exception ex){}
-            if(dir!=null){
-                cursor.updatePosition(board.getNextPosition(cursor.getPos(), dir),dir);
-            }
+        	if(listeningForInput){
+                Direction dir=null;
+                if(e.getKeyCode()==KeyEvent.VK_LEFT) dir=Direction.LEFT;
+                if(e.getKeyCode()==KeyEvent.VK_RIGHT) dir=Direction.RIGHT;
+                if(e.getKeyCode()==KeyEvent.VK_UP) dir=Direction.UP;
+                if(e.getKeyCode()==KeyEvent.VK_DOWN) dir=Direction.DOWN;
+                if(e.getKeyCode()==KeyEvent.VK_N) try{dispRef.newGame();}catch(Exception ex){}
+                if(e.getKeyCode()==KeyEvent.VK_S) try{dispRef.solveGame();}catch(Exception ex){}
+                move(dir);
+        	}
 		}
 		public void keyReleased(KeyEvent e) {}
 	}

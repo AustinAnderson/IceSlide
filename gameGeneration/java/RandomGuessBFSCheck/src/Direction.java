@@ -4,6 +4,13 @@ public class Direction {
 	public static final Direction DOWN=new Direction('v',1,0);
 	public static final Direction LEFT=new Direction('<',0,-1);
 	public static final Direction RIGHT=new Direction('>',0,1);
+	public static Direction parse(char dirChar){
+		Direction dir=Direction.UP;
+		if(dirChar==DOWN.disp) dir=Direction.DOWN;
+		if(dirChar==LEFT.disp) dir=Direction.LEFT;
+		if(dirChar==RIGHT.disp) dir=Direction.RIGHT;
+		return dir;
+	}
 	@Override
 	public String toString(){
 		return ""+disp;
