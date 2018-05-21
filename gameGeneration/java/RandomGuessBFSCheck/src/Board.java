@@ -43,6 +43,8 @@ public class Board {
 	public Board(int height,int width,int minMoves){
 		if(height<4) height=4;
 		if(width<4) width=4;
+		if(height>64) height=64;
+		if(width>64) height=64;
 		int solutionLength=0;
         this.height=height;
         this.width=width;

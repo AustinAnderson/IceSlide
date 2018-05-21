@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.imageio.ImageIO;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
@@ -155,36 +156,47 @@ public class Display extends JFrame {
 		}
 	}
 	private static final long serialVersionUID = 1L;
-	public Display() throws IOException{
-		Board board=new Board(15,20,20);
+	private Board board;
+	private BoardImage img;
+	private Player cursor;
+	public void newGame() throws IOException{
+		board=new Board(15,20,20);
 		int initCol=0;
 		boolean[][] rocks=board.toBoolMap();
 		for(int i=0;i<rocks[0].length;i++)
 		{
 			if(!rocks[0][i]) initCol=i;
 		}
-		BoardImage img=new BoardImage();
-		
+		if(img!=null)this.remove(img);
+		img=new BoardImage();
 		img.update(board.toBoolMap());
-		setLayout(new GridLayout(1,1));
-		this.add(img);
-		Player cursor=new Player(0,initCol,img.getTileHeight(),img.getTileWidth(),this);
+		cursor=new Player(0,initCol,img.getTileHeight(),img.getTileWidth(),this);
 		img.setSmile(cursor);
-		this.addKeyListener(new KeyListener(){
-			public void keyTyped(KeyEvent e) {}
-			@Override
-			public void keyPressed(KeyEvent e) {
-				Direction dir=null;
-				if(e.getKeyCode()==KeyEvent.VK_LEFT) dir=Direction.LEFT;
-				if(e.getKeyCode()==KeyEvent.VK_RIGHT) dir=Direction.RIGHT;
-				if(e.getKeyCode()==KeyEvent.VK_UP) dir=Direction.UP;
-				if(e.getKeyCode()==KeyEvent.VK_DOWN) dir=Direction.DOWN;
-				if(dir!=null){
-					cursor.updatePosition(board.getNextPosition(cursor.getPos(), dir),dir);
-				}
-			}
-			public void keyReleased(KeyEvent e) {}
-		});
+		this.add(img);
+        this.repaint();
+	}
+	private class ControlsMap implements KeyListener{
+		private final Display dispRef;
+		public ControlsMap(Display dispRef){this.dispRef=dispRef;}
+        public void keyTyped(KeyEvent e) {}
+        @Override
+        public void keyPressed(KeyEvent e) {
+            Direction dir=null;
+            if(e.getKeyCode()==KeyEvent.VK_LEFT) dir=Direction.LEFT;
+            if(e.getKeyCode()==KeyEvent.VK_RIGHT) dir=Direction.RIGHT;
+            if(e.getKeyCode()==KeyEvent.VK_UP) dir=Direction.UP;
+            if(e.getKeyCode()==KeyEvent.VK_DOWN) dir=Direction.DOWN;
+            if(e.getKeyCode()==KeyEvent.VK_N) try{dispRef.newGame();}catch(Exception ex){}
+            if(dir!=null){
+                cursor.updatePosition(board.getNextPosition(cursor.getPos(), dir),dir);
+            }
+		}
+		public void keyReleased(KeyEvent e) {}
+	}
+	public Display() throws IOException{
+		setLayout(new GridLayout(2,1));
+		newGame();
+		this.addKeyListener(new ControlsMap(this));
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setMinimumSize(new Dimension(img.getWidth(),img.getHeight()+20));
 		pack();
