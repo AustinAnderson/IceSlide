@@ -1,6 +1,10 @@
+package BackingLogic;
 import java.io.PrintStream;
 import java.util.LinkedList;
 import java.util.Queue;
+
+import Common.Coordinate;
+import Common.Direction;
 
 public class Board {
 

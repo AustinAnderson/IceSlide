@@ -1,247 +1,43 @@
 
-import java.awt.Dimension;
-import java.awt.Graphics;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.awt.Image;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JPanel;
+import Common.Direction;
+import GameDisplay.GameDisplayPanel;
 
 public class Display extends JFrame {
-	class Player {
-		private BufferedImage currentSprite;
-		private final static int sleepTime=3;
-		private final Map<Direction,BufferedImage[]> spriteMap;
-		private final int tileHeight;
-		private final int tileWidth;
-		private final JFrame parent;
-		private AtomicBoolean moving;
-		private int row;
-		private int col;
-		private AtomicInteger x;
-		private AtomicInteger y;
-		public Player(int initialRow,int initialCol,int tileHeight,int tileWidth,JFrame parent) throws IOException{
-			this.parent=parent;
-			this.moving=new AtomicBoolean(false);
-			this.row=initialRow;
-			this.col=initialCol;
-			this.tileHeight=tileHeight;
-			this.tileWidth=tileWidth;
-			this.x=new AtomicInteger(initialCol*tileWidth);
-			this.y=new AtomicInteger(initialRow*tileHeight);
-			spriteMap=new HashMap<>();
-			
-			spriteMap.put(Direction.DOWN, new BufferedImage[]{
-				ImageIO.read(new File("Resources/FairUse/downStep.png")),
-				ImageIO.read(new File("Resources/FairUse/down.png"))
-			});
-			spriteMap.put(Direction.LEFT, new BufferedImage[]{
-				ImageIO.read(new File("Resources/FairUse/leftStep.png")),
-				ImageIO.read(new File("Resources/FairUse/left.png"))
-			});
-			spriteMap.put(Direction.RIGHT, new BufferedImage[]{
-				ImageIO.read(new File("Resources/FairUse/rightStep.png")),
-				ImageIO.read(new File("Resources/FairUse/right.png"))
-			});
-			spriteMap.put(Direction.UP, new BufferedImage[]{
-				ImageIO.read(new File("Resources/FairUse/upStep.png")),
-				ImageIO.read(new File("Resources/FairUse/up.png"))
-			});
-			currentSprite=spriteMap.get(Direction.DOWN)[1];
-		}
-		
-		public Coordinate getPos(){return new Coordinate(row,col);}
-		//return -1,0, or 1
-		private int sign(int value){
-			if(value==0) return 0;
-			return (value>>31)|1;//arithmetic shift to fill everything with sign bit, then last number is 1
-		}
-		public Thread updatePosition(Coordinate target,Direction dir){
-            Thread t=null;
-			if(!moving.get()){
-				currentSprite=spriteMap.get(dir)[0];
-                t=new Thread(new Runnable(){
-                    @Override
-                    public void run(){
-                        moving.set(true);
-                        int dY=(target.r*tileHeight)-y.get();
-                        int dX=(target.c*tileWidth)-x.get();
-                        int incX=sign(dX);
-                        int incY=sign(dY);
-                        int targetDist=Math.abs(dY);
-                        if(Math.abs(dX)>targetDist) targetDist=Math.abs(dX);
-                        
-                        if(targetDist<tileWidth){
-                        	for(int i=0;i<tileHeight*2;i++){
-                                try {Thread.sleep(sleepTime);} catch (InterruptedException e) {}
-                                parent.repaint();
-                                if(i==tileHeight-1) currentSprite=spriteMap.get(dir)[1];
-                        	}
-                        }
-                        else{
-                            for(int i=0;i<targetDist;i++){
-                                if(i==(tileHeight-1)){
-                                    currentSprite=spriteMap.get(dir)[1];
-                                }
-                                y.addAndGet(incY);
-                                x.addAndGet(incX);
-                                try {Thread.sleep(sleepTime);} catch (InterruptedException e) {}
-                                parent.repaint();
-                            }
-                        }
-                        row=target.r;
-                        col=target.c;
-                        moving.set(false);
-                    }
-                });
-                t.start();
-			}
-			return t;
-		}
-		public void paintComponent(Graphics g){
-			g.drawImage(currentSprite, x.get(),y.get(),null);
-		}
-	}
-	class BoardImage extends JPanel{
-		private static final long serialVersionUID = 1L;
-		private final BufferedImage Ice;
-		private final BufferedImage Rock;
-		private boolean[][] rockMap;
-		private Player smiley=null;
-		public BoardImage() throws IOException{
-			try{
-				Ice=ImageIO.read(new File("Resources/Ice.png"));
-				Rock=ImageIO.read(new File("Resources/Rock.png"));
-			}catch(MalformedURLException ex){
-				throw new IOException("unable to init images",ex);
-			}
-            if(!(Ice.getHeight()==Rock.getHeight()&&Ice.getWidth()==Rock.getWidth())){
-            	throw new IOException("rock and ice images must be the same dimensions");
-            }
-		}
-		public void setSmile(Player smile){
-			smiley=smile;
-		}
-		private Image getImg(boolean rock){
-			if(rock) return Rock;
-			return Ice;
-		}
-		public int getWidth(){ return Rock.getWidth()*rockMap[0].length;}
-		public int getHeight(){ return Rock.getHeight()*rockMap.length;}
-		public int getTileWidth(){ return Rock.getWidth();}
-		public int getTileHeight(){ return Rock.getHeight();}
-		public void update(boolean[][] rockMap){
-			this.rockMap=rockMap;
-		}
-		@Override
-		public void paintComponent(Graphics g){
-			for(int r=0;r<rockMap.length;r++){
-				for(int c=0;c<rockMap[0].length;c++){
-					g.drawImage(getImg(rockMap[r][c]), c*Rock.getWidth(),r*Rock.getHeight(), null);
-				}
-			}
-			if(smiley!=null){
-				smiley.paintComponent(g);
-			}
-		}
-	}
+	
+	private GameDisplayPanel displayPanel;
 	private static final long serialVersionUID = 1L;
-	private Board board;
-	private BoardImage img;
-	private Player cursor;
-	private boolean listeningForInput=true;
-	public void solveGame(){
-		listeningForInput=false;
-		String solution=board.solve(cursor.getPos());
-		if(solution!=null){
-			Queue<Direction> moves=new LinkedList<Direction>();
-			for(int i=0;i<solution.length();i++){
-				moves.add(Direction.parse(solution.charAt(i)));
-			}
-			new Thread(new AutoMoveTask(this,moves)).start();
-		}
-		listeningForInput=true;
-	}
-	public void newGame() throws IOException{
-		board=new Board(15,20,20);
-		int initCol=0;
-		boolean[][] rocks=board.toBoolMap();
-		for(int i=0;i<rocks[0].length;i++)
-		{
-			if(!rocks[0][i]) initCol=i;
-		}
-		if(img!=null)this.remove(img);
-		img=new BoardImage();
-		img.update(board.toBoolMap());
-		cursor=new Player(0,initCol,img.getTileHeight(),img.getTileWidth(),this);
-		img.setSmile(cursor);
-		this.add(img);
-        this.repaint();
-	}
-	private Thread move(Direction dir){
-		Thread moveTask=null;
-        if(dir!=null){
-            moveTask=cursor.updatePosition(board.getNextPosition(cursor.getPos(), dir),dir);
-        }
-        return moveTask;
-	}
-	private class AutoMoveTask implements Runnable{
-		private Queue<Direction> moves;
-		private Display disp;
-		public AutoMoveTask(Display disp,Queue<Direction> moves){
-			this.moves=moves;
-			this.disp=disp;
-		}
-		public void run(){
-			while(!moves.isEmpty()){
-                try {
-                    disp.move(moves.poll()).join();
-                    Thread.sleep(20);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-			}
-		}
-	}
-	private class ControlsMap implements KeyListener{
-		private final Display dispRef;
-		public ControlsMap(Display dispRef){this.dispRef=dispRef;}
-        public void keyTyped(KeyEvent e) {}
-        @Override
-        public void keyPressed(KeyEvent e) {
-        	if(listeningForInput){
-                Direction dir=null;
-                if(e.getKeyCode()==KeyEvent.VK_LEFT) dir=Direction.LEFT;
-                if(e.getKeyCode()==KeyEvent.VK_RIGHT) dir=Direction.RIGHT;
-                if(e.getKeyCode()==KeyEvent.VK_UP) dir=Direction.UP;
-                if(e.getKeyCode()==KeyEvent.VK_DOWN) dir=Direction.DOWN;
-                if(e.getKeyCode()==KeyEvent.VK_N) try{dispRef.newGame();}catch(Exception ex){}
-                if(e.getKeyCode()==KeyEvent.VK_S) try{dispRef.solveGame();}catch(Exception ex){}
-                move(dir);
-        	}
-		}
-		public void keyReleased(KeyEvent e) {}
-	}
 	public Display() throws IOException{
-		setLayout(new GridLayout(2,1));
-		newGame();
-		this.addKeyListener(new ControlsMap(this));
+		this.addKeyListener(new KeyListener(){
+            public void keyTyped(KeyEvent e) {}
+            @Override
+            public void keyPressed(KeyEvent e) {
+                //if(listeningForInput){
+                    Direction dir=null;
+                    if(e.getKeyCode()==KeyEvent.VK_LEFT) dir=Direction.LEFT;
+                    if(e.getKeyCode()==KeyEvent.VK_RIGHT) dir=Direction.RIGHT;
+                    if(e.getKeyCode()==KeyEvent.VK_UP) dir=Direction.UP;
+                    if(e.getKeyCode()==KeyEvent.VK_DOWN) dir=Direction.DOWN;
+                    if(e.getKeyCode()==KeyEvent.VK_N) try{displayPanel.newGame();}catch(Exception ex){}
+                    if(e.getKeyCode()==KeyEvent.VK_S) try{displayPanel.solveGame();}catch(Exception ex){}
+                    displayPanel.move(dir);
+                //}
+            }
+            public void keyReleased(KeyEvent e) {}
+		});
+		this.setLayout(new GridLayout(2,1));
+		this.add(new JButton("text"));
+		displayPanel=new GameDisplayPanel(this);
+		displayPanel.newGame();
+		this.add(displayPanel);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.setMinimumSize(new Dimension(img.getWidth(),img.getHeight()+20));
 		pack();
 		setVisible(true);
 	}

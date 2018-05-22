@@ -1,3 +1,4 @@
+package Common;
 
 public class Coordinate {
 	public int r;

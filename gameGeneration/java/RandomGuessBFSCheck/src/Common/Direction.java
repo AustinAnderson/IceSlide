@@ -1,3 +1,4 @@
+package Common;
 
 public class Direction {
 	public static final Direction UP=new Direction('^',-1,0);
