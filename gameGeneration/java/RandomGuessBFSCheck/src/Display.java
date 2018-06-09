@@ -32,8 +32,6 @@ public class Display extends JFrame {
             }
             public void keyReleased(KeyEvent e) {}
 		});
-		this.setLayout(new GridLayout(2,1));
-		this.add(new JButton("text"));
 		displayPanel=new GameDisplayPanel(this);
 		displayPanel.newGame();
 		this.add(displayPanel);
