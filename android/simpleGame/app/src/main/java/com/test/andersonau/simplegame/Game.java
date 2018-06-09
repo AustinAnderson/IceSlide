@@ -30,7 +30,7 @@ public class Game implements Playable{
         int tileSideLengthCalc=maxWidth/boardCols;
         if(boardCols>boardRows) tileSideLengthCalc=maxHeight/boardRows;
         tileSideLength=tileSideLengthCalc;
-        board=new Board(boardRows,boardCols,20);
+        board=new Board(boardRows,boardCols,10);
         player=new Player(board.getStartCoord(),tileSideLength,tileSideLength,bitmapManager);
         boardImage=new BoardImage(tileSideLength,tileSideLength,bitmapManager,board.toBoolMap());
     }
