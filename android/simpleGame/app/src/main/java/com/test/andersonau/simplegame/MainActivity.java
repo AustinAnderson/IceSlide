@@ -18,19 +18,18 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
+        final android.content.Context passingContext=this;
+        setContentView(
+                new GamePanel(
+                        passingContext,
+                        new Game(1000,720,passingContext)
+                )
+        );
+        /*
         LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View view = inflater.inflate(R.layout.activity_main, null);
 
         final RelativeLayout layout= (RelativeLayout) view.findViewById(R.id.MainLayoutId);
-        final android.content.Context passingContext=this;
-        /*
-        setContentView(
-                new GamePanel(
-                        passingContext,
-                        new Game(1000,700,passingContext)
-                )
-        );
-        /*/
         layout.post(new Runnable() {
             @Override
             public void run() {
